@@ -1,2 +1,1 @@
-
 # ex-paygate-capture
