@@ -18,11 +18,17 @@ func NewPaymentService(logger logger.Logger) Payment {
 }
 
 // CapturePayment Public.
-func (payWrap *PaymentService) CapturePayment(approveObj *models.Approve) (string, error) {
+func (payWrap *PaymentService) CapturePayment(approveObj *models.Approve, captureAmount string) error {
 	methodName := "CapturePayment"
 	payWrap.logger.Debug(payWrap.requestID, "M:%v start", methodName)
 	start := time.Now()
 
+	/*
+			4000 0000 0000 0119: authorisation failure
+			4000 0000 0000 0259: capture failure
+		        4000 0000 0000 3238: refund failure
+	*/
+
 	payWrap.logger.Debug(payWrap.requestID, "M:%v ts %+v", methodName, time.Since(start))
-	return "", nil
+	return nil
 }

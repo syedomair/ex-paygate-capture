@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/jinzhu/gorm"
+	"github.com/syedomair/ex-paygate-capture/routes/capture"
 	"github.com/syedomair/ex-paygate-lib/lib/container"
 	log "github.com/syedomair/ex-paygate-lib/lib/tools/logger"
-	"github.com/syedomair/ex-paygate-capture/routes/capture"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
@@ -51,8 +51,8 @@ type Routes []Route
 
 func routerSetup(db *gorm.DB, logger log.Logger, signingKey string) *chi.Mux {
 
-	repoCapture := capture.NewPostgresRepository(db, logger)
 	payCapture := capture.NewPaymentService(logger)
+	repoCapture := capture.NewPostgresRepository(db, logger, payCapture)
 
 	router := chi.NewRouter()
 	captureController := &capture.Controller{

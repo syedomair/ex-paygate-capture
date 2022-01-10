@@ -6,5 +6,5 @@ import (
 
 // Payment Interface
 type Payment interface {
-	CapturePayment(*models.Approve) (string, error)
+	CapturePayment(approveObj *models.Approve, amount string) error
 }
