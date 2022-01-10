@@ -41,12 +41,12 @@ func (p *postgresRepo) CaptureApprove(inputApproveKey map[string]interface{}) (*
 	start := time.Now()
 
 	approveKey := ""
-	if approveKeyValue, ok := inputApproveKey["approve_key"]; ok {
+	if approveKeyValue, ok := inputApproveKey[ApproveKey]; ok {
 		approveKey = approveKeyValue.(string)
 	}
 
 	amount := ""
-	if amountValue, ok := inputApproveKey["amount"]; ok {
+	if amountValue, ok := inputApproveKey[Amount]; ok {
 		amount = amountValue.(string)
 	}
 

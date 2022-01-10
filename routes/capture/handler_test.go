@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	valid_approve_key   = "06F3BCC1C3B836B1AA6D"
-	invalid_approve_key = "1D754E20948F3EB8589A9"
+	ValidApproveKey   = "06F3BCC1C3B836B1AA6D"
+	InvalidApproveKey = "1D754E20948F3EB8589A9"
 )
 
 func TestCaptureAction(t *testing.T) {
@@ -32,7 +32,7 @@ func TestCaptureAction(t *testing.T) {
 	}
 
 	//Invalid approve_key
-	res, req := mockserver.MockTestServer(method, url, []byte(`{"amount":"2", "approve_key":"`+invalid_approve_key+`"}`))
+	res, req := mockserver.MockTestServer(method, url, []byte(`{"`+Amount+`":"2", "`+ApproveKey+`":"`+InvalidApproveKey+`"}`))
 	c.CaptureAction(res, req)
 	response := new(TestResponse)
 	json.NewDecoder(res.Result().Body).Decode(response)
@@ -43,7 +43,7 @@ func TestCaptureAction(t *testing.T) {
 	}
 
 	//Valid approve_key
-	res, req = mockserver.MockTestServer(method, url, []byte(`{"amount":"10", "approve_key":"`+valid_approve_key+`"}`))
+	res, req = mockserver.MockTestServer(method, url, []byte(`{"`+Amount+`":"2", "`+ApproveKey+`":"`+ValidApproveKey+`"}`))
 	c.CaptureAction(res, req)
 	response = new(TestResponse)
 	json.NewDecoder(res.Result().Body).Decode(response)
@@ -58,6 +58,9 @@ type mockPay struct {
 }
 
 func (mdb *mockPay) CapturePayment(approveObj *models.Approve, captureAmount string) error {
+	if approveObj.CCNumber == CaptureFailureCCNumber {
+		return errors.New("capture failure")
+	}
 	return nil
 }
 
@@ -69,10 +72,10 @@ func (mdb *mockDB) SetRequestID(requestID string) {
 
 func (mdb *mockDB) CaptureApprove(inputApproveKey map[string]interface{}) (*models.Approve, error) {
 	approveKey := ""
-	if approveKeyValue, ok := inputApproveKey["approve_key"]; ok {
+	if approveKeyValue, ok := inputApproveKey[ApproveKey]; ok {
 		approveKey = approveKeyValue.(string)
 	}
-	if approveKey != valid_approve_key {
+	if approveKey != ValidApproveKey {
 		return nil, errors.New("invalid approve_key")
 	}
 	return &models.Approve{}, nil
