@@ -76,7 +76,7 @@ func (p *postgresRepo) transactionCreateLedger(db *gorm.DB,
 	return db.Transaction(func(tx *gorm.DB) error {
 
 		approveObj := models.Approve{}
-		if err := p.client.Set("gorm:query_option", "FOR UPDATE").Table("approve").
+		if err := tx.Set("gorm:query_option", "FOR UPDATE").Table("approve").
 			Where("approve_key = ?", approveKey).
 			Where("status = ?", 1).
 			Find(&approveObj).Error; err != nil {
@@ -108,22 +108,9 @@ func (p *postgresRepo) transactionCreateLedger(db *gorm.DB,
 
 		g := new(errgroup.Group)
 		g.Go(func() error {
-			newLedger := &models.Ledger{}
-			newLedger.MerchantID = approveObj.MerchantID
-			newLedger.ApproveID = approveObj.ID
-			newLedger.Amount = amountCaptureStr
-			newLedger.ActionType = Capture
-			newLedger.CreatedAt = time.Now().Format(time.RFC3339)
-			if err := p.client.Create(newLedger).Error; err != nil {
-				return err
-			}
-			return nil
-		})
-
-		g.Go(func() error {
 			inputApproveKey := make(map[string]interface{})
 			inputApproveKey["amount_balance"] = amountBalance - amountCapture
-			if err := p.client.
+			if err := tx.
 				Table("approve").
 				Where("approve_key = ?", approveKey).
 				Updates(inputApproveKey).Error; err != nil {
@@ -131,6 +118,19 @@ func (p *postgresRepo) transactionCreateLedger(db *gorm.DB,
 			}
 			return nil
 		})
+		g.Go(func() error {
+			newLedger := &models.Ledger{}
+			newLedger.MerchantID = approveObj.MerchantID
+			newLedger.ApproveID = approveObj.ID
+			newLedger.Amount = amountCaptureStr
+			newLedger.ActionType = Capture
+			newLedger.CreatedAt = time.Now().Format(time.RFC3339)
+			if err := tx.Create(newLedger).Error; err != nil {
+				return err
+			}
+			return nil
+		})
+
 		if err := g.Wait(); err != nil {
 			return err
 		}
